@@ -1,0 +1,14 @@
+# Alternative to scripts/local-db.mjs for machines with Docker.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: peak
+      POSTGRES_PASSWORD: ${PEAK_PG_PASSWORD:?set PEAK_PG_PASSWORD}
+      POSTGRES_DB: peak
+    ports:
+      - "5433:5432"
+    volumes:
+      - peak-pg:/var/lib/postgresql/data
+volumes:
+  peak-pg:

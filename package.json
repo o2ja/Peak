@@ -1,0 +1,16 @@
+{
+  "name": "peak",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "db:init": "node scripts/local-db.mjs init",
+    "db:start": "node scripts/local-db.mjs start",
+    "db:stop": "node scripts/local-db.mjs stop",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  }
+}

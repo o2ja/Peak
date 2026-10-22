@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Money uses Decimal(10,3): JOD has three minor digits. Currency itself lives in SiteSettings.
+
+// Singleton row (id = 1). Unknown business facts stay null until PEAK confirms them.
+model SiteSettings {
+  id                 Int      @id @default(1)
+  brandName          String   @default("peak")
+  heroHeading        String
+  heroSubheading     String
+  heroCtaLabel       String
+  heroCtaHref        String   @default("/menu")
+  storyHeading       String?
+  storyBody          String?
+  announcement       String?
+  currencyCode       String   @default("JOD") @db.VarChar(3)
+  instagramUrl       String?
+  phone              String?
+  email              String?
+  address            String?
+  mapUrl             String?
+  openingHours       String?
+  timezone           String?
+  orderInstructions  String?
+  policyText         String?
+  seoTitle           String
+  seoDescription     String
+  acceptingOrders    Boolean  @default(true)
+  pickupEnabled      Boolean  @default(true)
+  deliveryEnabled    Boolean  @default(false)
+  deliveryFee        Decimal  @default(0) @db.Decimal(10, 3)
+  payAtPickupEnabled Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model Category {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String     @unique
+  description String?
+  // Colours used to draw the category's cup in the hand-held selector. Null = not shown in the selector.
+  liquidColor String?    @db.VarChar(7)
+  layerColor  String?    @db.VarChar(7)
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  items       MenuItem[]
+
+  @@index([isActive, sortOrder])
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id               String           @id @default(uuid()) @db.Uuid
+  categoryId       String           @db.Uuid
+  category         Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name             String
+  slug             String           @unique
+  shortDescription String?
+  description      String?
+  imageUrl         String?
+  liquidColor      String?          @db.VarChar(7)
+  layerColor       String?          @db.VarChar(7)
+  basePrice        Decimal          @db.Decimal(10, 3)
+  isActive         Boolean          @default(true)
+  isFeatured       Boolean          @default(false)
+  isSeasonal       Boolean          @default(false)
+  isAvailable      Boolean          @default(true)
+  sortOrder        Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  options          MenuItemOption[]
+  orderItems       OrderItem[]
+
+  @@index([categoryId, isActive, sortOrder])
+  @@index([isFeatured])
+  @@map("menu_items")
+}
+
+model MenuItemOption {
+  id         String                @id @default(uuid()) @db.Uuid
+  menuItemId String                @db.Uuid
+  menuItem   MenuItem              @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  name       String
+  minSelect  Int                   @default(0)
+  maxSelect  Int                   @default(1)
+  sortOrder  Int                   @default(0)
+  values     MenuItemOptionValue[]
+
+  @@index([menuItemId])
+  @@map("menu_item_options")
+}
+
+model MenuItemOptionValue {
+  id          String         @id @default(uuid()) @db.Uuid
+  optionId    String         @db.Uuid
+  option      MenuItemOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  name        String
+  priceDelta  Decimal        @default(0) @db.Decimal(10, 3)
+  isDefault   Boolean        @default(false)
+  isAvailable Boolean        @default(true)
+  sortOrder   Int            @default(0)
+
+  @@index([optionId])
+  @@map("menu_item_option_values")
+}
+
+enum FulfilmentMethod {
+  PICKUP
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PAY_AT_PICKUP
+}
+
+model Order {
+  id              String             @id @default(uuid()) @db.Uuid
+  reference       String             @unique @db.VarChar(16)
+  // Secret handed only to the customer who placed the order; required to read its status publicly.
+  accessToken     String             @unique
+  idempotencyKey  String             @unique
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  fulfilment      FulfilmentMethod
+  deliveryAddress String?
+  notes           String?            @db.VarChar(500)
+  status          OrderStatus        @default(PENDING)
+  paymentStatus   PaymentStatus      @default(UNPAID)
+  paymentMethod   PaymentMethod
+  currencyCode    String             @db.VarChar(3)
+  subtotal        Decimal            @db.Decimal(10, 3)
+  discountTotal   Decimal            @default(0) @db.Decimal(10, 3)
+  deliveryFee     Decimal            @default(0) @db.Decimal(10, 3)
+  total           Decimal            @db.Decimal(10, 3)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  items           OrderItem[]
+  events          OrderStatusEvent[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String    @id @default(uuid()) @db.Uuid
+  orderId         String    @db.Uuid
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId      String?   @db.Uuid
+  menuItem        MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  nameSnapshot    String
+  imageSnapshot   String?
+  basePrice       Decimal   @db.Decimal(10, 3)
+  // [{ option, value, priceDelta }] exactly as priced at order time
+  optionsSnapshot Json
+  unitPrice       Decimal   @db.Decimal(10, 3)
+  quantity        Int
+  lineTotal       Decimal   @db.Decimal(10, 3)
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
+
+model OrderStatusEvent {
+  id         String       @id @default(uuid()) @db.Uuid
+  orderId    String       @db.Uuid
+  order      Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  adminId    String?      @db.Uuid
+  admin      AdminUser?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  note       String?      @db.VarChar(500)
+  createdAt  DateTime     @default(now())
+
+  @@index([orderId, createdAt])
+  @@map("order_status_events")
+}
+
+model AdminUser {
+  id           String             @id @default(uuid()) @db.Uuid
+  email        String             @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  events       OrderStatusEvent[]
+  auditLogs    AuditLog[]
+
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id        String     @id @default(uuid()) @db.Uuid
+  adminId   String?    @db.Uuid
+  admin     AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime   @default(now())
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Owned by connect-pg-simple; declared here so the table is created by migrations.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}
