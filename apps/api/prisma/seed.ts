@@ -1,6 +1,6 @@
 // Development seed. EVERY menu item and price here is FICTIONAL sample data, not PEAK's real menu.
 // Safe to re-run: existing rows are left as they are, so edits made in the dashboard survive.
-import { prisma } from "../src/db.ts";
+import { pool, prisma } from "../src/db.ts";
 
 type SeedItem = {
   slug: string;
@@ -125,4 +125,4 @@ main()
     console.error(e);
     process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => prisma.$disconnect().then(() => pool.end()));

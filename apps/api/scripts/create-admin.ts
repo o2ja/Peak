@@ -3,7 +3,7 @@
 // The password is read from ADMIN_PASSWORD or prompted for (input hidden), never passed as an argument.
 import { createInterface } from "node:readline";
 import { hashPassword } from "../src/auth.ts";
-import { prisma } from "../src/db.ts";
+import { pool, prisma } from "../src/db.ts";
 
 async function promptHidden(question: string): Promise<string> {
   const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
@@ -35,3 +35,4 @@ const admin = await prisma.adminUser.upsert({
 });
 console.log(`Admin ready: ${admin.email}`);
 await prisma.$disconnect();
+await pool.end();

@@ -3,7 +3,7 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.ts";
 import { hashPassword } from "../src/auth.ts";
-import { prisma } from "../src/db.ts";
+import { pool, prisma } from "../src/db.ts";
 
 const app = createApp();
 const ADMIN = { email: "test-admin@example.test", password: "correct-horse-battery" };
@@ -34,7 +34,7 @@ beforeAll(async () => {
   const menu: Menu = (await request(app).get("/api/public/menu").expect(200)).body;
   latte = menu.categories.find((c) => c.slug === "matcha")!.items.find((i) => i.slug === "iced-matcha-latte")!;
 });
-afterAll(() => prisma.$disconnect());
+afterAll(() => prisma.$disconnect().then(() => pool.end()));
 
 describe("admin auth", () => {
   it("rejects every protected route without a session", async () => {

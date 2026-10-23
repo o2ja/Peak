@@ -1,7 +1,9 @@
 {
   "name": "peak",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "db:init": "node scripts/local-db.mjs init",
     "db:start": "node scripts/local-db.mjs start",
@@ -12,5 +14,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"
+  },
+  "dependencies": {
+    "@neon/config": "^1.9.3",
+    "@neon/env": "^1.6.4"
   }
 }

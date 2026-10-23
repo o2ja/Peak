@@ -1,11 +1,10 @@
 import argon2 from "argon2";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import pg from "pg";
 import type { RequestHandler } from "express";
 import { z } from "zod";
 import { config, isProd } from "./config.ts";
-import { prisma } from "./db.ts";
+import { pool, prisma } from "./db.ts";
 import { HttpError } from "./lib/errors.ts";
 
 declare module "express-session" {
@@ -19,7 +18,7 @@ const PgStore = connectPgSimple(session);
 export const sessionMiddleware = session({
   name: "peak.sid",
   // Table is created by the Prisma migration, not by the store.
-  store: new PgStore({ pool: new pg.Pool({ connectionString: config.DATABASE_URL, max: 4 }), tableName: "session" }),
+  store: new PgStore({ pool, tableName: "session" }),
   secret: config.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
