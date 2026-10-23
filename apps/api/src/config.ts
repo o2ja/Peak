@@ -11,4 +11,8 @@ const schema = z.object({
 
 export const config = schema.parse(process.env);
 export const isProd = config.NODE_ENV === "production";
-export const allowedOrigins = config.WEB_ORIGIN.split(",").map((s) => s.trim());
+// Comma-separated; "*" matches one DNS label fragment, e.g. https://web-*-team.vercel.app for Vercel preview/deployment URLs.
+const originPatterns = config.WEB_ORIGIN.split(",").map(
+  (s) => new RegExp(`^${s.trim().replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[a-z0-9-]*")}$`),
+);
+export const isAllowedOrigin = (origin: string) => originPatterns.some((re) => re.test(origin));

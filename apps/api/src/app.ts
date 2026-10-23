@@ -1,7 +1,7 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
-import { allowedOrigins, isProd } from "./config.ts";
+import { isAllowedOrigin, isProd } from "./config.ts";
 import { sessionMiddleware } from "./auth.ts";
 import { errorHandler, HttpError } from "./lib/errors.ts";
 import { uploadDir } from "./lib/storage.ts";
@@ -14,13 +14,13 @@ export function createApp() {
   app.disable("x-powered-by");
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   // The web app normally proxies /api through Next (same origin); CORS covers direct calls from allowed origins.
-  app.use(cors({ origin: allowedOrigins, credentials: true }));
+  app.use(cors({ origin: (o, cb) => cb(null, !o || isAllowedOrigin(o)), credentials: true }));
   app.use(express.json({ limit: "100kb" }));
 
   // CSRF guard: browsers always send Origin on cross-site writes; reject any that isn't ours.
   app.use((req, _res, next) => {
     const origin = req.get("origin");
-    if (req.method !== "GET" && req.method !== "HEAD" && origin && !allowedOrigins.includes(origin)) {
+    if (req.method !== "GET" && req.method !== "HEAD" && origin && !isAllowedOrigin(origin)) {
       return next(new HttpError(403, "Origin not allowed"));
     }
     next();
