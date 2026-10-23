@@ -125,99 +125,101 @@ export default function CategoriesPage() {
         <CategoryForm initial={empty} submitLabel="Create" onSubmit={(d) => save(d)} />
       </section>
       <StateBlock loading={loading && !data} error={data ? null : error} onRetry={refetch} empty={data?.length === 0 ? "No categories yet." : undefined}>
-        <table className="adm-table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Name</th>
-              <th>Cup selector</th>
-              <th className="num">Items</th>
-              <th>Status</th>
-              <th aria-label="Actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {data?.map((c, i) =>
-              editing === c.id ? (
-                <tr key={c.id}>
-                  <td colSpan={6}>
-                    <CategoryForm initial={toDraft(c)} submitLabel="Save" onSubmit={(d) => save(d, c.id)} onCancel={() => setEditing(null)} />
-                  </td>
-                </tr>
-              ) : (
-                <tr key={c.id}>
-                  <td>
-                    <button type="button" className="textbtn" aria-label={`Move ${c.name} up`} onClick={() => move(i, -1)} disabled={i === 0}>
-                      ↑
-                    </button>{" "}
-                    <button type="button" className="textbtn" aria-label={`Move ${c.name} down`} onClick={() => move(i, 1)} disabled={i === data.length - 1}>
-                      ↓
-                    </button>
-                  </td>
-                  <td>
-                    <strong>{c.name}</strong> <span className="adm-muted">/{c.slug}</span>
-                  </td>
-                  <td>
-                    {c.liquidColor ? (
-                      <span style={{ display: "inline-flex", gap: 4 }} aria-label="Shown in selector">
-                        <span style={{ width: 16, height: 16, borderRadius: 4, background: c.liquidColor }} />
-                        {c.layerColor && <span style={{ width: 16, height: 16, borderRadius: 4, background: c.layerColor, border: "1px solid #ddd" }} />}
+        <div className="table-wrap">
+          <table className="adm-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Name</th>
+                <th>Cup selector</th>
+                <th className="num">Items</th>
+                <th>Status</th>
+                <th aria-label="Actions" />
+              </tr>
+            </thead>
+            <tbody>
+              {data?.map((c, i) =>
+                editing === c.id ? (
+                  <tr key={c.id}>
+                    <td colSpan={6}>
+                      <CategoryForm initial={toDraft(c)} submitLabel="Save" onSubmit={(d) => save(d, c.id)} onCancel={() => setEditing(null)} />
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={c.id}>
+                    <td>
+                      <button type="button" className="textbtn" aria-label={`Move ${c.name} up`} onClick={() => move(i, -1)} disabled={i === 0}>
+                        ↑
+                      </button>{" "}
+                      <button type="button" className="textbtn" aria-label={`Move ${c.name} down`} onClick={() => move(i, 1)} disabled={i === data.length - 1}>
+                        ↓
+                      </button>
+                    </td>
+                    <td>
+                      <strong>{c.name}</strong> <span className="adm-muted">/{c.slug}</span>
+                    </td>
+                    <td>
+                      {c.liquidColor ? (
+                        <span style={{ display: "inline-flex", gap: 4 }} aria-label="Shown in selector">
+                          <span style={{ width: 16, height: 16, borderRadius: 4, background: c.liquidColor }} />
+                          {c.layerColor && <span style={{ width: 16, height: 16, borderRadius: 4, background: c.layerColor, border: "1px solid #ddd" }} />}
+                        </span>
+                      ) : (
+                        <span className="adm-muted">—</span>
+                      )}
+                    </td>
+                    <td className="num">{c.itemCount}</td>
+                    <td>
+                      <span className="status" data-s={c.isActive ? "READY" : "CANCELLED"}>
+                        {c.isActive ? "Visible" : "Archived"}
                       </span>
-                    ) : (
-                      <span className="adm-muted">—</span>
-                    )}
-                  </td>
-                  <td className="num">{c.itemCount}</td>
-                  <td>
-                    <span className="status" data-s={c.isActive ? "READY" : "CANCELLED"}>
-                      {c.isActive ? "Visible" : "Archived"}
-                    </span>
-                  </td>
-                  <td style={{ display: "flex", gap: 12 }}>
-                    <button type="button" className="textbtn" onClick={() => setEditing(c.id)}>
-                      Edit
-                    </button>
-                    {c.isActive ? (
+                    </td>
+                    <td style={{ display: "flex", gap: 12 }}>
+                      <button type="button" className="textbtn" onClick={() => setEditing(c.id)}>
+                        Edit
+                      </button>
+                      {c.isActive ? (
+                        <ConfirmButton
+                          label="Archive"
+                          className="textbtn"
+                          title={`Archive ${c.name}?`}
+                          body="The category and all its items disappear from the public menu until restored. Nothing is deleted."
+                          confirmLabel="Archive"
+                          danger
+                          onConfirm={async () => {
+                            await save({ ...toDraft(c), isActive: false }, c.id);
+                          }}
+                        />
+                      ) : (
+                        <button type="button" className="textbtn" onClick={() => save({ ...toDraft(c), isActive: true }, c.id)}>
+                          Restore
+                        </button>
+                      )}
                       <ConfirmButton
-                        label="Archive"
+                        label="Delete"
                         className="textbtn"
-                        title={`Archive ${c.name}?`}
-                        body="The category and all its items disappear from the public menu until restored. Nothing is deleted."
-                        confirmLabel="Archive"
+                        title={`Delete ${c.name}?`}
+                        body={c.itemCount > 0 ? `It still holds ${c.itemCount} item(s). Move them to another category first, or archive instead.` : "This permanently removes the empty category."}
+                        confirmLabel="Delete"
                         danger
+                        disabled={c.itemCount > 0}
                         onConfirm={async () => {
-                          await save({ ...toDraft(c), isActive: false }, c.id);
+                          try {
+                            await api(`/api/admin/categories/${c.id}`, { method: "DELETE" });
+                            toast.show("ok", "Category deleted.");
+                            refetch();
+                          } catch (e) {
+                            toast.show("error", (e as ApiError).message);
+                          }
                         }}
                       />
-                    ) : (
-                      <button type="button" className="textbtn" onClick={() => save({ ...toDraft(c), isActive: true }, c.id)}>
-                        Restore
-                      </button>
-                    )}
-                    <ConfirmButton
-                      label="Delete"
-                      className="textbtn"
-                      title={`Delete ${c.name}?`}
-                      body={c.itemCount > 0 ? `It still holds ${c.itemCount} item(s). Move them to another category first, or archive instead.` : "This permanently removes the empty category."}
-                      confirmLabel="Delete"
-                      danger
-                      disabled={c.itemCount > 0}
-                      onConfirm={async () => {
-                        try {
-                          await api(`/api/admin/categories/${c.id}`, { method: "DELETE" });
-                          toast.show("ok", "Category deleted.");
-                          refetch();
-                        } catch (e) {
-                          toast.show("error", (e as ApiError).message);
-                        }
-                      }}
-                    />
-                  </td>
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                ),
+              )}
+            </tbody>
+          </table>
+        </div>
       </StateBlock>
       {toast.node}
     </>

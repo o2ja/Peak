@@ -127,6 +127,10 @@ export function PetalField({ density = 1 }: { density?: number }) {
     const onLeave = () => {
       pointer.x = pointer.y = -9999;
     };
+    // a finger lifts without a pointerleave, so without this the last touch keeps pushing flowers away forever
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") onLeave();
+    };
     const onVis = () => (document.hidden ? stop() : start());
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
@@ -140,6 +144,8 @@ export function PetalField({ density = 1 }: { density?: number }) {
     io.observe(cv);
     window.addEventListener("pointermove", onMove, { passive: true });
     document.addEventListener("pointerleave", onLeave);
+    window.addEventListener("pointerup", onUp, { passive: true });
+    window.addEventListener("pointercancel", onUp, { passive: true });
     document.addEventListener("visibilitychange", onVis);
     start();
     return () => {
@@ -147,6 +153,8 @@ export function PetalField({ density = 1 }: { density?: number }) {
       ro.disconnect();
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       document.removeEventListener("pointerleave", onLeave);
       document.removeEventListener("visibilitychange", onVis);
     };

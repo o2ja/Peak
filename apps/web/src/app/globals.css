@@ -111,6 +111,14 @@ h3 {
   letter-spacing: -0.015em;
   line-height: 1.15;
 }
+/* iOS zooms the page into any field under 16px when it is focused */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
 :focus-visible {
   outline: 3px solid var(--ink);
   outline-offset: 3px;
@@ -204,6 +212,13 @@ h3 {
 }
 .link:hover {
   text-decoration-color: var(--pink);
+}
+/* a finger-sized hit area; the negative margin keeps the layout where it was */
+@media (pointer: coarse) {
+  .link {
+    padding-block: 9px;
+    margin-block: -9px;
+  }
 }
 .textbtn {
   border: 0;
@@ -383,6 +398,15 @@ h3 {
   }
   .nav__brand span {
     display: none;
+  }
+  .nav__links a {
+    padding-block: 12px;
+  }
+}
+@media (pointer: coarse) {
+  .nav__brand {
+    padding-right: 8px;
+    min-height: 44px;
   }
 }
 
@@ -682,8 +706,9 @@ h3 {
   .pour {
     align-items: start;
   }
+  /* below the text (PourScene measures where it ends); the drawing scales into whatever height is left */
   .pour__stage {
-    inset: 56svh 0 0 0;
+    inset: max(40svh, var(--pour-top, 56svh) + 12px) 0 0 0;
   }
   .pour__text {
     gap: var(--s3);
@@ -697,6 +722,55 @@ h3 {
   }
   .pour__steps strong {
     font-size: var(--t-body);
+  }
+}
+/* short phones: the three step names in a row, and one shared slot (as tall as the longest) for the current step's
+   line, so the drawing keeps room and nothing shifts as the steps change */
+@media (max-width: 900px) and (max-height: 760px) {
+  .pour__text {
+    gap: var(--s2);
+  }
+  .pour__text > p {
+    font-size: var(--t-body);
+  }
+  .pour__steps {
+    grid-template-columns: repeat(3, auto) 1fr;
+    gap: 2px 20px;
+  }
+  .pour__steps li,
+  .pour__steps li > span {
+    display: contents;
+  }
+  .pour__steps li::before {
+    display: none;
+  }
+  .pour__steps strong {
+    grid-row: 1;
+    color: var(--ink-mute);
+    text-decoration: underline 3px transparent;
+    text-underline-offset: 6px;
+    transition:
+      color var(--dur),
+      text-decoration-color var(--dur);
+  }
+  .pour__steps li:nth-child(2) strong {
+    grid-column: 2;
+  }
+  .pour__steps li:nth-child(3) strong {
+    grid-column: 3;
+  }
+  .pour__body {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    padding-top: 6px;
+    visibility: hidden;
+  }
+  .pour[data-step="whisk"] li[data-k="whisk"] :is(strong, .pour__body),
+  .pour[data-step="pour"] li[data-k="pour"] :is(strong, .pour__body),
+  .pour[data-step="settle"] li[data-k="settle"] :is(strong, .pour__body) {
+    visibility: visible;
+    color: var(--ink);
+    text-decoration-color: var(--pink);
   }
 }
 
@@ -1065,10 +1139,12 @@ h3 {
   color: var(--ink);
 }
 @media (max-width: 900px) {
+  /* The details above are a fixed ~330px tall (one row of names, two lines of description), so the hand also shrinks
+     with the screen's height: its tallest cup top sits about 0.85 of the hand's width above the screen's bottom. */
   .cups__hand {
     left: -22vw;
     bottom: -4svh;
-    width: min(120vw, 64svh * 1.31);
+    width: min(120vw, 64svh * 1.31, (104svh - var(--nav-h) - 290px) / 0.85);
   }
   .cups__info {
     top: auto;
@@ -1081,11 +1157,37 @@ h3 {
     width: auto;
     gap: var(--s2);
   }
+  /* one swipeable row of names instead of three or four wrapped ones, so the cup below always has room */
   .cups__names {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0 14px;
+    gap: 0 18px;
     font-size: var(--t-small);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+    mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - 40px), transparent);
+  }
+  .cups__names::-webkit-scrollbar {
+    display: none;
+  }
+  .cups__names li {
+    flex: none;
+  }
+  .cups__names button {
+    min-height: 44px;
+    white-space: nowrap;
+  }
+  .cups__names button:hover {
+    transform: none;
+  }
+  .cups__detail > p:not(.cups__name) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
   .cups__title {
     font-size: clamp(2rem, 1.4rem + 3vw, 3rem);
@@ -1256,6 +1358,17 @@ h3 {
   font-size: var(--t-small);
   color: var(--ink-soft);
 }
+/* thumb-sized hit areas on touch screens, same visual rhythm */
+@media (pointer: coarse) {
+  .footer__cols ul {
+    gap: 0;
+  }
+  .footer__cols ul a,
+  .footer__base a {
+    display: inline-block;
+    padding-block: 10px;
+  }
+}
 @media (max-width: 760px) {
   .footer__cols {
     grid-template-columns: 1fr 1fr;
@@ -1381,16 +1494,37 @@ h3 {
   margin-left: auto;
   min-width: min(100%, 300px);
 }
+/* phones: the sticky bar is one swipeable row of chips over the search, not a block that covers half the screen */
 @media (max-width: 760px) {
+  .menu-tools {
+    gap: 8px;
+    padding-block: 10px;
+    margin-top: var(--s4);
+  }
   .chips {
     gap: 6px;
+    flex-wrap: nowrap;
+    width: calc(100% + var(--gutter) * 2);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar {
+    display: none;
   }
   .chip {
     flex: none;
+    white-space: nowrap;
   }
   .search {
     margin-left: 0;
     width: 100%;
+  }
+  .menu-cat__head {
+    flex-wrap: wrap;
+    gap: 4px var(--s3);
   }
 }
 .menu-cat {

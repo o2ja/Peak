@@ -144,24 +144,26 @@ export default function TodayPage() {
             {d.topItems.length === 0 ? (
               <p className="adm-muted">No orders yet.</p>
             ) : (
-              <table className="adm-table">
-                <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th className="num">Cups</th>
-                    <th className="num">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {d.topItems.map((t) => (
-                    <tr key={t.name}>
-                      <td>{t.name}</td>
-                      <td className="num">{t.quantity}</td>
-                      <td className="num">{formatMoney(t.value, d.currencyCode)}</td>
+              <div className="table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th className="num">Cups</th>
+                      <th className="num">Value</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {d.topItems.map((t) => (
+                      <tr key={t.name}>
+                        <td>{t.name}</td>
+                        <td className="num">{t.quantity}</td>
+                        <td className="num">{formatMoney(t.value, d.currencyCode)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 
@@ -170,24 +172,26 @@ export default function TodayPage() {
             {d.recent.length === 0 ? (
               <p className="adm-muted">No orders yet. They&apos;ll appear here as soon as a customer checks out.</p>
             ) : (
-              <table className="adm-table">
-                <tbody>
-                  {d.recent.map((o) => (
-                    <tr key={o.id}>
-                      <td>
-                        <Link href={`/admin/orders/${o.id}`}>{o.reference}</Link>
-                      </td>
-                      <td>{o.customerName}</td>
-                      <td>
-                        <span className="status" data-s={o.status}>
-                          {STATUS_LABEL[o.status]}
-                        </span>
-                      </td>
-                      <td className="num">{formatMoney(o.total, d.currencyCode)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="table-wrap">
+                <table className="adm-table">
+                  <tbody>
+                    {d.recent.map((o) => (
+                      <tr key={o.id}>
+                        <td>
+                          <Link href={`/admin/orders/${o.id}`}>{o.reference}</Link>
+                        </td>
+                        <td>{o.customerName}</td>
+                        <td>
+                          <span className="status" data-s={o.status}>
+                            {STATUS_LABEL[o.status]}
+                          </span>
+                        </td>
+                        <td className="num">{formatMoney(o.total, d.currencyCode)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 

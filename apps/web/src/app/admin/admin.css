@@ -462,16 +462,32 @@ dialog.adm-dialog::backdrop {
     order: 3;
     width: 100%;
   }
+  /* one line beside the brand instead of a right-aligned stack */
   .adm-user {
     margin-top: 0;
     margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0 14px;
+  }
+  .adm-user > span {
+    flex-basis: 100%;
+    text-align: right;
   }
   .adm-main {
     padding: 16px 16px 48px;
   }
   .kpis,
   .rail {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .kpi {
+    padding: 12px 14px;
+  }
+  .kpi dd {
+    font-size: 20px;
   }
   .adm-grid--2,
   .adm-form .row,
@@ -480,5 +496,25 @@ dialog.adm-dialog::backdrop {
   }
   .opt-editor .val {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* touch screens: finger-sized targets for the small text buttons, toggles and checkboxes */
+@media (pointer: coarse) {
+  .adm-brand,
+  .adm .textbtn,
+  .adm .toggle {
+    min-height: 44px;
+  }
+  .adm .textbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+  }
+  .adm input[type="checkbox"],
+  .adm input[type="radio"] {
+    width: 22px;
+    height: 22px;
   }
 }

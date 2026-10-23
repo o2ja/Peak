@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -61,6 +61,7 @@ export function CupScroll({ drinks, currency }: { drinks: MenuItem[]; currency: 
   const root = useRef<HTMLElement>(null);
   const st = useRef<ScrollTrigger | null>(null);
   const first = useRef(true);
+  const names = useRef<HTMLUListElement>(null);
   const n = drinks.length;
 
   useGSAP(
@@ -197,6 +198,16 @@ export function CupScroll({ drinks, currency }: { drinks: MenuItem[]; currency: 
     { scope: root, dependencies: [sel], revertOnUpdate: false },
   );
 
+  // on phones the names are one swipeable row: keep the current one in view
+  useEffect(() => {
+    const row = names.current;
+    const btn = row?.querySelectorAll("button")[sel];
+    if (!row || !btn || row.scrollWidth <= row.clientWidth) return;
+    const r = row.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    row.scrollTo({ left: row.scrollLeft + b.left - r.left - (r.width - b.width) / 2, behavior: "smooth" });
+  }, [sel]);
+
   if (n === 0) return null;
   const d = drinks[sel];
 
@@ -238,7 +249,7 @@ export function CupScroll({ drinks, currency }: { drinks: MenuItem[]; currency: 
       </div>
 
       <div className="cups__info">
-        <ul className="cups__names" aria-label="Drinks">
+        <ul ref={names} className="cups__names" aria-label="Drinks">
           {drinks.map((x, i) => (
             <li key={x.id}>
               <button type="button" aria-current={i === sel} onClick={() => go(i)}>

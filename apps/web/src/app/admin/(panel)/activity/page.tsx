@@ -31,26 +31,28 @@ export default function ActivityPage() {
         <span className="adm-muted">Last 100 changes to the menu, settings and payments. Order stage changes live in each order&apos;s history.</span>
       </div>
       <StateBlock loading={loading && !data} error={data ? null : error} onRetry={refetch} empty={data?.length === 0 ? "No changes recorded yet." : undefined}>
-        <table className="adm-table">
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Who</th>
-              <th>What</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.map((e) => (
-              <tr key={e.id}>
-                <td>{new Date(e.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</td>
-                <td>{e.by ?? "—"}</td>
-                <td>{LABEL[e.action] ?? e.action}</td>
-                <td className="adm-muted">{describe(e.details) || "—"}</td>
+        <div className="table-wrap">
+          <table className="adm-table">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Who</th>
+                <th>What</th>
+                <th>Details</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data?.map((e) => (
+                <tr key={e.id}>
+                  <td>{new Date(e.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</td>
+                  <td>{e.by ?? "—"}</td>
+                  <td>{LABEL[e.action] ?? e.action}</td>
+                  <td className="adm-muted">{describe(e.details) || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </StateBlock>
     </>
   );

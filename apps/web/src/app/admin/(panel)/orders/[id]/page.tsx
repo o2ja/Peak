@@ -81,49 +81,51 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <div className="adm-grid adm-grid--2">
               <section className="adm-panel" aria-labelledby="items-title">
                 <h2 id="items-title">What they ordered</h2>
-                <table className="adm-table">
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th className="num">Qty</th>
-                      <th className="num">Each</th>
-                      <th className="num">Line</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {order.items.map((i) => (
-                      <tr key={i.id}>
-                        <td>
-                          <strong>{i.name}</strong>
-                          {i.options.length > 0 && <div className="adm-muted">{i.options.map((o) => `${o.option}: ${o.value}`).join(" · ")}</div>}
-                        </td>
-                        <td className="num">{i.quantity}</td>
-                        <td className="num">{formatMoney(i.unitPrice, order.currencyCode)}</td>
-                        <td className="num">{formatMoney(i.lineTotal, order.currencyCode)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan={3}>Subtotal</td>
-                      <td className="num">{formatMoney(order.subtotal, order.currencyCode)}</td>
-                    </tr>
-                    {Number(order.deliveryFee) > 0 && (
+                <div className="table-wrap">
+                  <table className="adm-table">
+                    <thead>
                       <tr>
-                        <td colSpan={3}>Delivery</td>
-                        <td className="num">{formatMoney(order.deliveryFee, order.currencyCode)}</td>
+                        <th>Item</th>
+                        <th className="num">Qty</th>
+                        <th className="num">Each</th>
+                        <th className="num">Line</th>
                       </tr>
-                    )}
-                    <tr>
-                      <td colSpan={3}>
-                        <strong>Total</strong>
-                      </td>
-                      <td className="num">
-                        <strong>{formatMoney(order.total, order.currencyCode)}</strong>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    </thead>
+                    <tbody>
+                      {order.items.map((i) => (
+                        <tr key={i.id}>
+                          <td>
+                            <strong>{i.name}</strong>
+                            {i.options.length > 0 && <div className="adm-muted">{i.options.map((o) => `${o.option}: ${o.value}`).join(" · ")}</div>}
+                          </td>
+                          <td className="num">{i.quantity}</td>
+                          <td className="num">{formatMoney(i.unitPrice, order.currencyCode)}</td>
+                          <td className="num">{formatMoney(i.lineTotal, order.currencyCode)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan={3}>Subtotal</td>
+                        <td className="num">{formatMoney(order.subtotal, order.currencyCode)}</td>
+                      </tr>
+                      {Number(order.deliveryFee) > 0 && (
+                        <tr>
+                          <td colSpan={3}>Delivery</td>
+                          <td className="num">{formatMoney(order.deliveryFee, order.currencyCode)}</td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td colSpan={3}>
+                          <strong>Total</strong>
+                        </td>
+                        <td className="num">
+                          <strong>{formatMoney(order.total, order.currencyCode)}</strong>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
                 {order.notes && (
                   <p style={{ marginTop: 16 }}>
                     <strong>Customer note:</strong> {order.notes}

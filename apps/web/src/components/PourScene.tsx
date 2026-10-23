@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -33,6 +33,16 @@ const FOAM = [
  */
 export function PourScene() {
   const root = useRef<HTMLElement>(null);
+
+  // On phones the drawing sits under the text; tell the CSS where the text ends so the two never overlap.
+  useEffect(() => {
+    const sec = root.current;
+    const text = sec?.querySelector<HTMLElement>(".pour__text");
+    if (!sec || !text) return;
+    const ro = new ResizeObserver(() => sec.style.setProperty("--pour-top", `${text.offsetTop + text.offsetHeight}px`));
+    ro.observe(text);
+    return () => ro.disconnect();
+  }, []);
 
   useGSAP(
     () => {
@@ -84,7 +94,7 @@ export function PourScene() {
             <li key={s.key} data-k={s.key}>
               <span>
                 <strong>{s.title}</strong>
-                {s.body}
+                <span className="pour__body">{s.body}</span>
               </span>
             </li>
           ))}
