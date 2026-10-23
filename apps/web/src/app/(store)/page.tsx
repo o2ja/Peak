@@ -42,7 +42,7 @@ export default async function Home() {
           </div>
           <figure className="hero__cup" data-speed={-0.6}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/drinks/strawberry-matcha.webp" alt="An iced strawberry matcha: strawberry purée, milk and matcha in layers" width={615} height={862} fetchPriority="high" />
+            <img src="/images/drinks/matcha-blueberry.webp" alt="An iced blueberry matcha: blueberries swirled through milk and matcha, fresh berries on top" width={430} height={728} fetchPriority="high" />
           </figure>
         </div>
       </section>

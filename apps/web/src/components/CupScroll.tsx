@@ -233,8 +233,6 @@ export function CupScroll({ drinks, currency }: { drinks: MenuItem[]; currency: 
                 />
               </div>
             ))}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="cups__thumb" src="/images/hand-thumb.webp" alt="" width={1200} height={914} />
           </div>
         </div>
       </div>
