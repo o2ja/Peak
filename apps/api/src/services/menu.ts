@@ -113,8 +113,11 @@ export const itemSchema = z.object({
   description: nullableText(1000),
   imageUrl: z
     .string()
-    // An upload, or one of the drink photos bundled with the storefront (apps/web/public/images/drinks).
-    .regex(/^\/(uploads|images\/drinks)\/[a-zA-Z0-9-]+\.(png|jpg|webp)$/, "Use an uploaded image")
+    // An upload (local or Vercel Blob), or one of the drink photos bundled with the storefront (apps/web/public/images/drinks).
+    .regex(
+      /^(https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com)?\/(uploads|images\/drinks)\/[a-zA-Z0-9-]+\.(png|jpg|webp)$/,
+      "Use an uploaded image",
+    )
     .nullish()
     .transform((v) => v ?? null),
   liquidColor: hex,

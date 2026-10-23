@@ -1,11 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join, resolve } from "node:path";
+import { put } from "@vercel/blob";
 import { config } from "../config.ts";
 import { HttpError } from "./errors.ts";
 
-// Development storage: files on local disk, served by the API at /uploads.
-// To move to object storage later, replace saveImage and keep its signature.
+// Vercel Blob when BLOB_READ_WRITE_TOKEN is set (serverless disk is ephemeral); otherwise local disk served at /uploads.
 export const uploadDir = resolve(config.UPLOAD_DIR);
 export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
@@ -21,8 +21,12 @@ export async function saveImage(buf: Buffer): Promise<string> {
   const ext = sniff(buf);
   if (!ext) throw new HttpError(415, "Upload a PNG, JPEG or WebP image.");
   if (buf.length > MAX_UPLOAD_BYTES) throw new HttpError(413, "Images must be 3 MB or smaller.");
-  await mkdir(uploadDir, { recursive: true });
   const name = `${randomUUID()}.${ext}`;
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`uploads/${name}`, buf, { access: "public", addRandomSuffix: false, contentType: ext === "jpg" ? "image/jpeg" : `image/${ext}` });
+    return blob.url;
+  }
+  await mkdir(uploadDir, { recursive: true });
   await writeFile(join(uploadDir, name), buf);
   return `/uploads/${name}`;
 }

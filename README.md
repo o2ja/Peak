@@ -56,6 +56,25 @@ Production start: `npm run start -w apps/api` and `npm run start -w apps/web` af
 - API (`apps/api/.env`): `DATABASE_URL`, `SESSION_SECRET` (32+ chars), `PORT`, `WEB_ORIGIN` (comma-separated allowed origins), `UPLOAD_DIR`, `PUBLIC_API_URL`, `NODE_ENV`; `ADMIN_PASSWORD` optional for non-interactive `admin:create`.
 - Web (`apps/web/.env.local`): `API_URL` (server-side), `NEXT_PUBLIC_SITE_URL`.
 
+## Deploy to Vercel
+
+Two Vercel projects from this one repo, plus a Neon Postgres database and a Vercel Blob store.
+
+1. **API project** — Import the repo, Root Directory `apps/api` (settings come from `apps/api/vercel.json`).
+   - Storage tab: add **Neon** (sets `DATABASE_URL` + `DATABASE_URL_UNPOOLED`) and a **Blob** store (sets `BLOB_READ_WRITE_TOKEN`).
+   - Env: `SESSION_SECRET` (32+ random chars), `WEB_ORIGIN` = the web project's URL, e.g. `https://peak.vercel.app`.
+   - Deploy. Migrations run during the build.
+2. **Web project** — Import the same repo again, Root Directory `apps/web` (Next.js detected).
+   - Env: `API_URL` = the API project's URL, `NEXT_PUBLIC_SITE_URL` = this project's URL.
+3. **Seed + first admin** (once, from your machine, with the production URL):
+   ```bash
+   cd apps/api
+   DATABASE_URL="<neon url>" SESSION_SECRET="<same as Vercel>" npx tsx prisma/seed.ts
+   DATABASE_URL="<neon url>" SESSION_SECRET="<same as Vercel>" npx tsx scripts/create-admin.ts you@example.com "Your Name"
+   ```
+
+If you add a custom domain later, update `WEB_ORIGIN` and `NEXT_PUBLIC_SITE_URL`.
+
 ## How it works
 
 - **Prices are server-side only.** The client sends item ids, quantities and option-value ids. `apps/api/src/services/pricing.ts` is the single place prices are computed (exact `Decimal`, 3 decimals for JOD). Orders are priced again inside a serializable transaction, so an item sold out a moment ago cannot slip through.
